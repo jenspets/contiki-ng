@@ -2,12 +2,14 @@
 
 # Install i386 binary support on x64 system and required tools
 sudo dpkg --add-architecture i386
+echo "deb http://ppa.launchpad.net/mosquitto-dev/mosquitto-ppa/ubuntu bionic main" | tee /etc/apt/sources.list.d/mosquitto
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 77B7346A59027B33C10CAFE35E64E954262C4500
 sudo apt update
 sudo apt install -y --no-install-recommends \
   libc6:i386 libstdc++6:i386 libncurses5:i386 libz1:i386 \
   build-essential doxygen git wget unzip python-serial rlwrap npm \
   default-jdk ant srecord python-pip iputils-tracepath uncrustify \
-  mosquitto mosquitto-clients valgrind \
+  mosquitto mosquitto-clients valgrind libcoap-1-0-bin \
   smitools snmp snmp-mibs-downloader \
   python-magic linux-image-extra-virtual openjdk-8-jdk
 
@@ -63,10 +65,6 @@ source ${HOME}/.bashrc
 
 # Create Cooja shortcut
 echo "#!/bin/bash\nant -Dbasedir=${COOJA} -f ${COOJA}/build.xml run" > ${HOME}/cooja && chmod +x ${HOME}/cooja
-
-# Install coap-cli
-sudo npm install coap-cli -g
-sudo ln -s /usr/bin/nodejs /usr/bin/node
 
 # Docker
 curl -fsSL get.docker.com -o get-docker.sh

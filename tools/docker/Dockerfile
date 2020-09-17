@@ -11,11 +11,12 @@ RUN apt-get -qq update && \
 
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
   echo "deb http://download.mono-project.com/repo/ubuntu bionic main" | tee /etc/apt/sources.list.d/mono-xamarin.list && \
+  apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 77B7346A59027B33C10CAFE35E64E954262C4500 && \
+  echo "deb http://ppa.launchpad.net/mosquitto-dev/mosquitto-ppa/ubuntu bionic main" | tee /etc/apt/sources.list.d/mosquitto.list && \
   apt-get -qq update && \
   apt-get -qq -y --no-install-recommends install \
     ant \
     build-essential \
-    default-jdk \
     doxygen \
     gdb \
     git \
@@ -23,12 +24,12 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     iputils-tracepath \
     iputils-ping \
     libcanberra-gtk-module:i386 \
+    libcoap-1-0-bin \
     libgtk2.0-0 \
     mono-complete \
     mosquitto \
     mosquitto-clients \
     net-tools \
-    npm \
     openjdk-8-jdk \
     python-pip \
     python-serial \
@@ -45,9 +46,6 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     snmp-mibs-downloader \
     > /dev/null \
   && apt-get -qq clean
-
-# Install coap-cli
-RUN npm -q install coap-cli@0.5.1 -g
 
 # Install ARM toolchain
 RUN wget -nv https://launchpad.net/gcc-arm-embedded/5.0/5-2015-q4-major/+download/gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 && \
@@ -103,7 +101,6 @@ RUN export uid=1000 gid=1000 && \
 USER user
 
 # Environment variables
-ENV JAVA_HOME           /usr/lib/jvm/default-java
 ENV HOME                /home/user
 ENV CONTIKI_NG          ${HOME}/contiki-ng
 ENV COOJA               ${CONTIKI_NG}/tools/cooja
@@ -116,6 +113,7 @@ RUN echo "#!/bin/bash\nant -Dbasedir=${COOJA} -f ${COOJA}/build.xml run" > ${HOM
 
 # Make sure we're using Java 8 for Cooja
 RUN sudo update-java-alternatives --set /usr/lib/jvm/java-1.8.0-openjdk-i386
+ENV JAVA_HOME           /usr/lib/jvm/java-8-openjdk-i386/
 
 # Download, build and install Renode
 RUN git clone --quiet https://github.com/renode/renode.git \
