@@ -53,6 +53,10 @@
 #define PRINTF(...) do {} while (0)
 #endif
 
+#if 1 
+#define CANARY {0xe7, 0x1d, 0xe5, 0xce}
+#endif
+
 #define  SPI_FLASH_INS_WREN        0x06
 #define  SPI_FLASH_INS_WRDI        0x04
 #define  SPI_FLASH_INS_RDSR        0x05
@@ -64,6 +68,49 @@
 #define  SPI_FLASH_INS_BE          0xc7
 #define  SPI_FLASH_INS_DP          0xb9
 #define  SPI_FLASH_INS_RES         0xab
+/*---------------------------------------------------------------------------*/
+#ifdef CANARY
+#define SECTOR_SIZE 0x10000
+#define PAGE_SIZE 0x100
+
+static void
+check_write_canary(const unsigned char *b, int size, unsigned long offset){
+  unsigned long i;
+  char c[4] = CANARY;
+
+  for (i=0; size>=4 && i<size-4; i++){
+    if (!memcmp(b+i, c, 4)){
+      //printf("Write canary at %08lx Offset: %08lx\n", offset, i);
+      printf("CANARY W P 0x%08lx O 0x%08lx\n", offset, i);
+    }
+  }
+}
+
+static void
+check_erase_canary(unsigned long offset){
+  unsigned long  i, p;
+  char c[4] = CANARY;
+  char b[PAGE_SIZE];
+  
+  for (p=offset; p<offset+SECTOR_SIZE; p+=PAGE_SIZE){
+    if (xmem_pread(b, PAGE_SIZE, p) != PAGE_SIZE){
+      printf("ERROR READING PAGE: %08lx\n", p);
+    }
+    
+    for (i=0; i<PAGE_SIZE-4; i++){
+      if (!memcmp(b+i, c, 4)){
+	//printf("Erase canary at %08lx Offset: %08lx\n", offset+p, i);
+	printf("CANARY E P 0x%08lx O 0x%08lx\n", offset+p, i);
+      }
+    }
+  }
+}
+
+/* static void */
+/* test_print(unsigned long page){ */
+/*   printf("Testing printf: %08lx\n", page); */
+/* } */
+#endif
 /*---------------------------------------------------------------------------*/
 static void
 write_enable(void)
@@ -121,8 +168,12 @@ static void
 erase_sector(unsigned long offset)
 {
   int s;
-
+  
   wait_ready();
+#ifdef CANARY
+  /* Need to read the pages in the sector to search for canary */
+  check_erase_canary(offset);
+#endif
   write_enable();
 
   s = splhigh();
@@ -199,6 +250,9 @@ program_page(unsigned long offset, const unsigned char *p, int nbytes)
   int s;
 
   wait_ready();
+#ifdef CANARY
+  check_write_canary(p, nbytes, offset);
+#endif
   write_enable();
 
   s = splhigh();
