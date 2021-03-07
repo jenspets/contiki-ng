@@ -45,6 +45,7 @@
 
 #include <limits.h>
 #include <string.h>
+#include <stdio.h>
 
 #define DEBUG 0
 #if DEBUG
@@ -842,6 +843,8 @@ merge_log(coffee_page_t file_page, int extend)
   new_file->flags &= ~COFFEE_FILE_MODIFIED;
   new_file->end = offset;
 
+  printf("Alloc P: 0x%04x: F: %s\n", new_file->page, hdr2.name);
+  
   cfs_close(fd);
 
   return 0;
@@ -978,7 +981,7 @@ cfs_open(const char *name, int flags)
 {
   int fd;
   struct file_desc *fdp;
-
+  
   fd = get_available_fd();
   if(fd < 0) {
     PRINTF("Coffee: Failed to allocate a new file descriptor!\n");
@@ -999,6 +1002,8 @@ cfs_open(const char *name, int flags)
       return -1;
     }
     fdp->file->end = 0;
+    
+    printf("Alloc new P: 0x%04x: F: %s\n", fdp->file->page, name);
   } else if(fdp->file->end == UNKNOWN_OFFSET) {
     fdp->file->end = file_end(fdp->file->page);
   }
