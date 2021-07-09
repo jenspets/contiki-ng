@@ -57,6 +57,7 @@
 #define CANARY
 #define CANARY1 {0xe7, 0x1d, 0xe5, 0xce}
 #define CANARY2 {0xca, 0xfe, 0xba, 0xbe}
+#define CANARY3 {0xde, 0xad, 0xbe, 0xef}
 #endif
 
 #define  SPI_FLASH_INS_WREN        0x06
@@ -80,12 +81,15 @@ check_write_canary(const unsigned char *b, int size, unsigned long offset){
   unsigned long i;
   char c1[4] = CANARY1;
   char c2[4] = CANARY2;
+  char c3[4] = CANARY3;
 
   for (i=0; size>=4 && i<size-4; i++){
     if (!memcmp(b+i, c1, 4)){
       printf("CANARY1 W P 0x%08lx O 0x%08lx\n", offset & ~(PAGE_SIZE-1), i);
     } else if (!memcmp(b+i, c2, 4)){
       printf("CANARY2 W P 0x%08lx O 0x%08lx\n", offset & ~(PAGE_SIZE-1), i);
+    } else if (!memcmp(b+i, c3, 4)){
+      printf("CANARY3 W P 0x%08lx O 0x%08lx\n", offset & ~(PAGE_SIZE-1), i);
     }
   }
 }
@@ -95,6 +99,7 @@ check_erase_canary(unsigned long offset){
   unsigned long  i, p;
   char c1[4] = CANARY1;
   char c2[4] = CANARY2;
+  char c3[4] = CANARY3;
   char b[PAGE_SIZE];
   
   for (p=offset; p<offset+SECTOR_SIZE; p+=PAGE_SIZE){
@@ -107,6 +112,8 @@ check_erase_canary(unsigned long offset){
 	printf("CANARY1 E P 0x%08lx S 0x%08lx\n", p, offset);
       } else if (!memcmp(b+i, c2, 4)){
 	printf("CANARY2 E P 0x%08lx S 0x%08lx\n", p, offset);
+      } else if (!memcmp(b+i, c3, 4)){
+	printf("CANARY3 E P 0x%08lx S 0x%08lx\n", p, offset);
       }
     }
   }
